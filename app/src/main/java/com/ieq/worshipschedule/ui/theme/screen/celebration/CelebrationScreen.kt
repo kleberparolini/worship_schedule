@@ -57,25 +57,46 @@ fun CelebrationScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 20.dp, vertical = 15.dp)
+                .padding(horizontal = 5.dp, vertical = 5.dp)
         ) {
             OutlinedTextField(
                 value = state.name,
                 onValueChange = {
                     onEvent(CelebrationEvent.NameChange(it))
-                })
+                },
+                label = {
+                    Text(text = "Culto")
+                },
+                modifier = Modifier
+                    .padding(5.dp)
+                    .fillMaxWidth()
+            )
 
             OutlinedTextField(
                 value = state.ministerName,
                 onValueChange = {
                     onEvent(CelebrationEvent.MinisterNameChange(it))
-                })
+                },
+                label = {
+                    Text(text = "Ministro")
+                },
+                modifier = Modifier
+                    .padding(5.dp)
+                    .fillMaxWidth()
+            )
 
             OutlinedTextField(
                 value = state.date,
                 onValueChange = {
                     onEvent(CelebrationEvent.DateChange(it))
-                })
+                },
+                label = {
+                    Text(text = "Data")
+                },
+                modifier = Modifier
+                    .padding(5.dp)
+                    .fillMaxWidth()
+            )
 
             Box(
                 modifier = Modifier.fillMaxWidth(),
