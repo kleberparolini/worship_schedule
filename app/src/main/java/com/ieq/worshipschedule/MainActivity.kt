@@ -1,106 +1,80 @@
 package com.ieq.worshipschedule
 
-import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Alignment.Companion.CenterHorizontally
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.ieq.worshipschedule.ui.theme.CelebrationDayCardUI
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.ieq.worshipschedule.ui.theme.WorshipScheduleTheme
+import com.ieq.worshipschedule.ui.theme.screen.celebration.CelebrationScreen
+import com.ieq.worshipschedule.ui.theme.screen.celebration.CelebrationViewModel
+import com.ieq.worshipschedule.ui.theme.screen.celebration_list.CelebrationListScreen
+import com.ieq.worshipschedule.ui.theme.screen.celebration_list.CelebrationListViewModel
+import com.ieq.worshipschedule.ui.util.Route
+import com.ieq.worshipschedule.ui.util.UiEvent
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             WorshipScheduleTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+                val navController = rememberNavController()
+
+                NavHost(
+                    navController = navController,
+                    startDestination = Route.celebrationList
                 ) {
-                    ConfigListView(LocalContext.current)
+                    composable(route = Route.celebrationList) {
+                        val viewModel = hiltViewModel<CelebrationListViewModel>()
+                        val celebrationList by viewModel.celebrationList.collectAsStateWithLifecycle()
+
+                        CelebrationListScreen(
+                            celebrationList = celebrationList,
+                            onCelebrationClick = {
+                                navController.navigate(
+                                    Route.celebration.replace(
+                                        "{id}",
+                                        it.id.toString()
+                                    )
+                                )
+                            },
+                            onAddCelebrationEvent = {
+                                navController.navigate(Route.celebration)
+                            }
+                        )
+                    }
+                    composable(route = Route.celebration) {
+                        val viewModel = hiltViewModel<CelebrationViewModel>()
+                        val state by viewModel.state.collectAsStateWithLifecycle()
+
+                        LaunchedEffect(key1 = true) {
+                            viewModel.event.collect { event ->
+                                when (event) {
+                                    is UiEvent.NavigateBack -> {
+                                        navController.popBackStack()
+                                    }
+
+                                    else -> Unit
+                                }
+
+                            }
+                        }
+
+                        CelebrationScreen(
+                            state = state,
+                            onEvent = viewModel::onEvent
+                        )
+                    }
                 }
+
             }
         }
     }
-}
-
-@Composable
-fun ConfigListView(context: Context, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier.fillMaxSize(),
-    ) {
-        Text(
-            text = "Bem vindo, louvorista!",
-            modifier = modifier
-                .padding(top = 10.dp)
-                .align(CenterHorizontally),
-            style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold),
-        )
-        Row(modifier = modifier) {
-            val celebrationList = listOf(
-                CelebrationData("Primicias", "Cris", "03/04/2025"),
-                CelebrationData("Santa Ceia", "Cris", "03/04/2025"),
-                CelebrationData("Missões", "Cris", "03/04/2025"),
-                CelebrationData("Familia", "Cris", "03/04/2025"),
-                CelebrationData("Primicias", "Cris", "03/04/2025"),
-                CelebrationData("Santa Ceia", "Cris", "03/04/2025"),
-                CelebrationData("Missões", "Cris", "03/04/2025"),
-                CelebrationData("Familia", "Cris", "03/04/2025"),
-                CelebrationData("Primicias", "Cris", "03/04/2025"),
-                CelebrationData("Santa Ceia", "Cris", "03/04/2025"),
-                CelebrationData("Missões", "Cris", "03/04/2025"),
-                CelebrationData("Familia", "Cris", "03/04/2025")
-            )
-
-            LazyColumn(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.SpaceEvenly
-            ) {
-                items(celebrationList) { celebration ->
-                    CelebrationDayCardUI(celebrationData = celebration, context)
-                }
-            }
-        }
-    }
-    Row(
-        modifier = modifier.padding(all = 10.dp),
-        verticalAlignment = Alignment.Bottom,
-        horizontalArrangement = Arrangement.End
-    ) {
-        IconButton(
-            onClick = { /*TODO*/ },
-            modifier = modifier.size(60.dp),
-            enabled = true
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.baseline_add_circle_24),
-                contentDescription = null,
-                modifier = modifier.size(80.dp)
-            )
-        }
-    }
-
 }
